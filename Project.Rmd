@@ -35,21 +35,23 @@ yeartodate <- function(year)# A function to get the accurate number of days sinc
 
 The first dataset (the MIT Election Lab dataset), had to be changed to relect the national counts for each party above the state counts, but I was able to get a count per election per party. Some parties are divided by states which might skew the numbers, as well as some parties having misspelled names such as the "Communist Party USE". All the major parties are spelled right in all elections from what I can tell with only the Libertarians changing their name halfway as the only major change so I didn't bother correcting anything. 
 
-Down below we have all of the results per election per party, with the results from all elections being graphed. I couldn't add color to the graph as the colors take up the whole graph. A full graph will be in the presentation though. 
+Down below we have all of the results per election per party, with the results from all elections being graphed. I couldn't add color to the graph as the colors take up the whole graph. A full graph will be in the presentation though. The date added is November 16th, as November 15th was the last possible day that could be after the election, but I did my math wrong and thought that this was just as good.
 
-```{r presidentialElection_a}
+```{r presidentialElection_a, warning=FALSE}
 partyPresidentTable <- read.table("https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/42MVDX/MFU99O", sep="\t", header=TRUE)# Using the MIT Election Lab's data (which is held by Harvard for some reason) I got the data for every popular vote for every presidential election since 1976.
 partyPresidentTable <- partyPresidentTable %>% mutate(date = as_date(yeartodate(year))) %>% select(-year) %>% group_by(date, party) %>% summarise(candidatevotes = sum(candidatevotes), totalvotes = sum(totalvotes))# Changes the dataset to give the national popular vote by year and by party, and to have an actual date associated with the elections.
-print(partyPresidentTable)# Printing the original results.
 ggplot(data = partyPresidentTable, aes(x = date, y = candidatevotes)) + geom_line(aes(x = date, y = candidatevotes, fill = party)) + scale_y_continuous(name="Votes", limits=c(100000, 70000000)) + labs(title ="Votes Each Election", x = "Year", y = "Votes")# A much nicer table will be featured later that has lables and properly displays the 3rd party results.
+print(partyPresidentTable)# Printing the original results.
 ```
 
-This contained all of the total values for each party and ranks them by how many votes they've gotten, which did reveal some issues. Firstly, there is a blank space, which is for blank and spoiled ballots, it is not a mistake and is completely intentional. I believe it was left blank to make sure they wouldn't get confused for the "Spoiled Ballot Party". Secondly two of the largest parties are the Independent Party and the Reform party, which will be explained later. In 1992 both hit their record highs and both ran the same candidate, Ross Perot, who was a big part of the reason that I did this topic in the first place.
+This contained all of the total values for each party and ranks them by how many votes they've gotten, which did reveal some issues. Firstly, there is a blank space, which is for blank and spoiled ballots, it is not a mistake and is completely intentional. I believe it was left blank to make sure they wouldn't get confused for the "Spoiled Ballot Party". Secondly two of the largest parties are the Independent Party and the Reform party, which will be explained later. In 1992 both hit their record highs and both ran the same candidate, Ross Perot, who was a big part of the reason that I did this topic in the first place. Regardless of Ross Perot, This does skew the vote a little, but not too much more than anything else I've mentioned before.
 
-```{r presidentialElection_b}
+```{r presidentialElection_b, warning=FALSE}
 partyNames <- partyPresidentTable %>% select(party, candidatevotes) %>% group_by(party) %>% summarise(partyvotes = sum(candidatevotes)) %>% arrange(desc(partyvotes))# Gets a list of the political parties and their total vote counts. 
 print(partyNames)
 ```
+
+Here we look at the dataset I ended up sticking with as my "tidied" dataset. In reality I did some more stuff after, but it was more for calculations than anything else. The thirdparty votes were calculated by seperating out the Democrats and the Republicans and subtracting them from the total, allowing for there to be an entire column for the third party and independent candidates. This is the dataset I am submitting by CSV. The colors for the graph correspond to their typical party with green for the Independents to represent the fact that many third parties revolve around legalizing marijuana or protecting the enviroment. 
 
 ```{r predidentialElection_c}
 consolidatedPresidentTableDem <- partyPresidentTable %>% filter(party == "democrat") %>% rename(demvotes = candidatevotes) %>% select(-party)# Gets the number of votes that the Dems got in each election.
@@ -60,17 +62,25 @@ ggplot(data = consolidatedPresidentTable, aes(x = date)) + geom_line(aes(y = rep
 write.csv(consolidatedPresidentTable,"C:\\Users\\Eric\\Downloads\\president.csv", row.names = TRUE)# Ejecting data to a CSV.
 ```
 
+The data had to be gathered to get a decent model of the data, giving a model where the total votes was not included. This gave the conclusion that third parties are in general becoming less popular over time and are being outpaced by both partied particularly the Democrats. It can also be seen the since the 90's the Democrats have tended to do better than the Republicans, even in elections the Republicans win.
+
 ```{r election_model1}
 consolidatedPresidentTable2 <- consolidatedPresidentTable %>% select(-totalvotes) %>% gather("party", "votes", demvotes, repvotes, thirdpartyvotes)# This is the building of a model to see how time has affected each of the political parties. This has lead me to the conclusion that political plurality tends to be weak and that the Democrats and Republicans politically dominate the precidency to a total degree (what a suprise).
 presm <- lm(votes ~ ., data = consolidatedPresidentTable2)
 summary(presm)
 ```
 
+This second model that I created was the same but I included the total votes. There is not much of not here and this is an overall terrible model that I included specifically becuase there is a P-value of 1 in it. I wasn't even sure that was possible, but here it is. The report is still 5 pages long without this interlude.
+
 ```{r election_model2}
 consolidatedPresidentTable3 <- consolidatedPresidentTable %>% gather("party", "votes", demvotes, repvotes, thirdpartyvotes)# This was much of the same but I decided to keep the total number of votes in the model, creating a monstrosity that I kept just to show off the P-value of 1.
 presm2 <- lm(votes ~ ., data = consolidatedPresidentTable3)
 summary(presm2)
 ```
+
+This dataset took considerably longer for me to find, and was much more difficult to tidy, but this was exactly what I wanted out of a dataset. This dataset came from Gallup Polls, asking the question of political party affiliation. The data was asked much more frequently than every election, but did not go back as far as the other dataset. I also do not know how many people were asked in this endeavor, but this was the only thing I could find. As this one was simpler there were fewer problems, even if it was a pain.
+
+First up I wanted to include a view of what the dataset initially looked like after all the garbage was removed, if only to prove that it was an uphill battle to get anything done in it.
 
 ```{r gallupPoll_a}
 writ <- GET(url = "https://news.gallup.com/poll/15370/party-affiliation.aspx")# This was to scrape data from the Gallup Polling website, and yes this was the best I could do for a second dataset from a second website.
@@ -81,8 +91,10 @@ gallupPol <- rowGetter[1]# All of this is to get the correct table and to remove
 gallupPol <- str_split(gallupPol, "\\r\\n")
 gallup <- as.data.frame(gallupPol)# Converts the data into a dataframe.
 gallup <- gallup %>% rename(x = c..In.politics..as.of.today..do.you.consider.yourself.a.Republican..a.Democrat.or.an.independent....) %>% filter(x != "%") %>% filter(x != " ") %>% filter(x != "Republicans") %>% filter(x != "Democrats") %>% filter(x != "Independents") %>% filter(x != "Trend since 2004") %>% filter(x != "In politics, as of today, do you consider yourself a Republican, a Democrat or an independent?") %>% filter(x != "") %>% filter(x != "Gallup")
-head(gallup)# Displays initial dataset.
+head(gallup, 10)# Displays initial dataset.
 ```
+
+After an ungodly ammount of trying to get the data to make sense I was able to not only fix the dates, but also get all the percents in one column with a party value, I did not make that mistake twice. From here I displayed the information on a graph with the colors messed up, but the actual lables were better for this one so you can see each of the different parties labled. Here we could see the truth, people don't want to identify as Democrats or Republicans anymore, even if they keep voting for them. This was also the dataset that I decided to submit as the tidied one.
 
 ```{r gallupPoll_b}
 gallupDem <- gallup[seq(4, nrow(gallup), 4), ] %>% as.data.frame()# Gets the correct percentages for each of the parties. 
@@ -97,27 +109,14 @@ gallup <- bind_cols(gallupDat, gallupRep)# Binds the tables together.
 gallup <- bind_cols(gallup, gallupInd)
 gallup <- bind_cols(gallup, gallupDem)
 gallup <- gallup %>% mutate(`Republicans %` = as.numeric(as.character(`Republicans %`))) %>% mutate(`Independents %` = as.numeric(as.character(`Independents %`))) %>% mutate(`Democrats %` = as.numeric(as.character(`Democrats %`))) %>% mutate(Date = as_date(substr(gallup$Date, 0, str_locate(gallup$Date, "-")[,1]-1))) %>% gather("party", "percent", `Republicans %`, `Independents %`, `Democrats %`)# Fixes the dates and the parties so that all the percentages so that they are in one party.
-head(gallup)# Displays the final dataset
+head(gallup, 10)# Displays the final dataset
 ggplot(data = gallup, aes(x = Date, y = percent, color = party)) + geom_line(aes(x = Date, y = percent, color = party)) + scale_y_continuous(name="Percentage", limits=c(0, 50)) + labs(title ="Percentage of Population", x = "Year", y = "Percentage")# Shows tha popularity of these groups since 2007
 write.csv(gallup,"C:\\Users\\Eric\\Downloads\\gallup.csv", row.names = TRUE)# Ejecting data to a CSV
 ```
 
+For the analysis I tried to make an identifier for party that wasn't a string, but got the same exact result so it didn't matter. I kept this version becuase I didn't wasnt the effort to go to waste, and came to the conslusion that people don't want to be Democrats or Republicans anymore and that either people in thrid partied aren't really voting or are voting for the Democrats and Republicans.
+
 ```{r gallup_model}
-gallup <- gallup %>% mutate(parInd = 0) %>% mutate(parRep = 0) %>% mutate(parDem = 0)# Added in indicator values, this ended up being a waste of time as you get the same exact result as with just using the native string indicator in the modeling function.
-
-for (i in 1:(nrow(gallup)/3))# Added in indicators by party using the position that I know they are in.
-{
-  gallup[[5]][i] = 1
-}
-for (i in (nrow(gallup)/3+1):(2*nrow(gallup)/3+1))
-{
-  gallup[[4]][i] = 1
-}
-for (i in (2*nrow(gallup)/3+1):nrow(gallup))
-{
-  gallup[[6]][i] = 1
-}
-
-pm <- glm(percent~Date+parInd+parRep+parDem, data = gallup)# Modeled the data and discovered that most people are unwilling to declare as Democrats or Republicans (all third parties got lumped in with independent as per the article) and the popularity of independence is increasing greatly with time. 
+pm <- lm(percent~Date+party, data = gallup)# Modeled the data and discovered that most people are unwilling to declare as Democrats or Republicans (all third parties got lumped in with independent as per the article) and the popularity of independence is increasing greatly with time. 
 summary(pm)
 ```
