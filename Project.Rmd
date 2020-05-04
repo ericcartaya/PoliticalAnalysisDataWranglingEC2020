@@ -33,7 +33,7 @@ yeartodate <- function(year)# A function to get the accurate number of days sinc
 }
 ```
 
-The first dataset (the MIT Election Lab dataset), had to be changed to relect the national counts for each party above the state counts, but I was able to get a count per election per party. Some parties are divided by states which might skew the numbers, as well as some parties having misspelled names such as the "Communist Party USE". All the major parties are spelled right in all elections from what I can tell with only the Libertarians changing their name halfway as the only major change so I didn't bother correcting anything. 
+The first dataset (the MIT Election Lab dataset), had to be changed to reflect the national counts for each party above the state counts, but I was able to get a count per election per party. Some parties are divided by states which might skew the numbers, as well as some parties having misspelled names such as the "Communist Party USE". All the major parties are spelled right in all elections from what I can tell with only the Libertarians changing their name halfway as the only major change so I didn't bother correcting anything. 
 
 Down below we have all of the results per election per party, with the results from all elections being graphed. I couldn't add color to the graph as the colors take up the whole graph. A full graph will be in the presentation though. The date added is November 16th, as November 15th was the last possible day that could be after the election, but I did my math wrong and thought that this was just as good.
 
@@ -70,7 +70,7 @@ presm <- lm(votes ~ ., data = consolidatedPresidentTable2)
 summary(presm)
 ```
 
-This second model that I created was the same but I included the total votes. There is not much of not here and this is an overall terrible model that I included specifically becuase there is a P-value of 1 in it. I wasn't even sure that was possible, but here it is. The report is still 5 pages long without this interlude.
+This second model that I created was the same but I included the total votes. There is not much of not here and this is an overall terrible model that I included specifically becuase there is a P-value of 1 in it. I wasn't even sure that was possible, but here it is. 
 
 ```{r election_model2}
 consolidatedPresidentTable3 <- consolidatedPresidentTable %>% gather("party", "votes", demvotes, repvotes, thirdpartyvotes)# This was much of the same but I decided to keep the total number of votes in the model, creating a monstrosity that I kept just to show off the P-value of 1.
@@ -120,3 +120,18 @@ For the analysis I tried to make an identifier for party that wasn't a string, b
 pm <- lm(percent~Date+party, data = gallup)# Modeled the data and discovered that most people are unwilling to declare as Democrats or Republicans (all third parties got lumped in with independent as per the article) and the popularity of independence is increasing greatly with time. 
 summary(pm)
 ```
+
+## The Conclusion
+
+The final conclusion that I have come to and the main reason that I chose to do this project is that I believe that the Democrats and Republicans aren't the only options. Ross Perot on a ballot of social liberalism, taxation of the rich, and assistance for businesses small and large alike got nearly a quarter of the votes in 1992. After that no other candidate has done as well but with their wanning popularity I think the two main parties have only some much time. I want to touch on what the larger third parties beleive but I first wanted to say that even if the United States keeps the Democrats and Republicans, I don't think they could stay the same and would see very different political ideas rising up to take their place.
+
+
+
+
+
+
+
+
+
+
+
