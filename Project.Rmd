@@ -11,7 +11,7 @@ In the modern American political landscape there are two dominant parties, the D
 
 The first dataset I found after only a couple of hours of looking from the MIT Election Lab, which gave me a link to a Harvard database for some reson. This gave me information of the popular vote in presidential elections over time and was tidied and scraped with relative ease. The other dataset was a massive pain and took me nearly a month (I found it on the 1st of May) to find it. I nearly thought about abandonning the project completely on multiple occacions, but I did not. It also took considerably more effore to scrape it, but was eventually molded into a dataset that showed me the results of polls on people's political identifications over time. 
 
-First I will go over the data and results, then I will cover the 
+First I will go over the data and results, then I will cover the actual analysis and results.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
@@ -31,15 +31,21 @@ yeartodate <- function(year)# A function to get the accurate number of days sinc
 }
 ```
 
+The first dataset (the MIT Election Lab dataset), had to be changed to relect the national counts for each party above the state counts, but I was able to get a count per election per party. Some parties are divided by states which might skew the numbers, as well as some partied 
+
 ```{r presidentialElection_a}
 partyPresidentTable <- read.table("https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/42MVDX/MFU99O", sep="\t", header=TRUE)# Using the MIT Election Lab's data (which is held by Harvard for some reason) I got the data for every popular vote for every presidential election since 1976.
 partyPresidentTable <- partyPresidentTable %>% mutate(date = as_date(yeartodate(year))) %>% select(-year) %>% group_by(date, party) %>% summarise(candidatevotes = sum(candidatevotes), totalvotes = sum(totalvotes))# Changes the dataset to give the national popular vote by year and by party, and to have an actual date associated with the elections.
 print(partyPresidentTable)# Printing the original results.
-ggplot(data = partyPresidentTable, aes(x = date, y = candidatevotes, fill = party)) + geom_line(aes(x = date, y = candidatevotes, fill = party)) + scale_y_continuous(name="Votes", limits=c(100000, 70000000)) + labs(title ="Votes Each Election", x = "Year", y = "Votes")# A much nicer table will be featured later that has lables and properly displays the 3rd party results.
+ggplot(data = partyPresidentTable, aes(x = date, y = candidatevotes)) + geom_line(aes(x = date, y = candidatevotes, fill = party)) + scale_y_continuous(name="Votes", limits=c(100000, 70000000)) + labs(title ="Votes Each Election", x = "Year", y = "Votes")# A much nicer table will be featured later that has lables and properly displays the 3rd party results.
 ```
 
 ```{r presidentialElection_b}
-partyNames <- partyPresidentTable %>% group_by(party) %>% select(party) %>% distinct()# Gets a list of the political parties. This one was more for me than anything else.
+partyNames <- partyPresidentTable %>% select(party, candidatevotes) %>% group_by(party) %>% summarise(partyvotes = sum(candidatevotes)) %>% arrange(desc(partyvotes))# Gets a list of the political parties and their total vote counts. 
+print(partyNames)
+```
+
+```{r predidentialElection_c}
 consolidatedPresidentTableDem <- partyPresidentTable %>% filter(party == "democrat") %>% rename(demvotes = candidatevotes) %>% select(-party)# Gets the number of votes that the Dems got in each election.
 consolidatedPresidentTableRep <- partyPresidentTable %>% filter(party == "republican") %>% rename(repvotes = candidatevotes) %>% select(-party)# Same but for the GOP.
 consolidatedPresidentTable <- full_join(consolidatedPresidentTableDem, consolidatedPresidentTableRep, by = "date") %>% select(-totalvotes.x) %>% rename(totalvotes = totalvotes.y) %>% mutate(thirdpartyvotes = totalvotes - demvotes - repvotes)# Combines the Dems and GOP so that we can use the total votes cast to see the number of votes that went to third party and independent candidates. Gather was also used so that the votes were all in one row.
